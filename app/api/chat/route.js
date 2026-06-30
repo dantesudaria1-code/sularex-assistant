@@ -1,6 +1,6 @@
 import { buildSystemPrompt } from "@/lib/systemPrompt";
 import { saveLead, saveSiteVisit } from "@/lib/leads";
-import { recommendByBill, priceLabel } from "@/lib/packages";
+import { recommendByBill, priceLabel, COMMERCIAL_THRESHOLD, COMMERCIAL_MESSAGE } from "@/lib/packages";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 const TOOLS = [
   {
     name: "save_lead",
-    description: "Save a qualified customer lead to the SULAREX CRM and notify the team by email. Call this once you have at least the customer's name and phone number.",
+    description: "Save a qualified customer lead to the SULAREX CRM and notify the team by email. Call this once you have at least the customer's name and contact number.",
     input_schema: {
       type: "object",
       properties: {
@@ -19,6 +19,8 @@ const TOOLS = [
         monthly_bill: { type: "string", description: "Monthly electric bill in pesos, digits only" },
         recommended_package: { type: "string" },
         property_type: { type: "string", enum: ["Residential", "Commercial"] },
+        business_name: { type: "string", description: "Commercial only (optional)" },
+        utility_provider: { type: "string", description: "e.g. CEPALCO, Davao Light, VECO" },
       },
       required: ["full_name", "phone"],
     },
@@ -44,7 +46,11 @@ const TOOLS = [
 
 async function runTool(name, input) {
   if (name === "save_lead") {
-    const r = await saveLead({ ...input, source: "AI Assistant (chat)" });
+    const extra = [];
+    if (input.utility_provider) extra.push("Utility: " + input.utility_provider);
+    if (input.business_name) extra.push("Business: " + input.business_name);
+    const location = [input.location, extra.join(" · ")].filter(Boolean).join(" · ");
+    const r = await saveLead({ ...input, location, source: "AI Assistant (chat)" });
     return { ok: r.ok, id: r.id, message: r.ok ? "Lead saved and team notified." : ("Could not save: " + r.error) };
   }
   if (name === "schedule_site_visit") {
@@ -58,16 +64,24 @@ async function runTool(name, input) {
 // so the widget still works on first deploy.
 function fallbackReply(messages) {
   const last = (messages[messages.length - 1]?.content || "").toString();
+  if (/talk to (a )?human|talk to (an )?agent|speak to|real person|customer service|representative/i.test(last)) {
+    return `Thank you for your interest in SULAREX.\nTo connect you with one of our solar specialists, please provide:\n• Full Name • Contact Number • Location • Average Monthly Electric Bill\n\nYou may also contact us directly:\n📍 Office Address: Tanleh Building (Inside Mindanao Daily News), Abellanosa Street, Consolacion, Cagayan de Oro City\n📞 Mobile: 0917 146 4377\n📘 Facebook Page: https://www.facebook.com/SularexEnergy\n\nOnce we receive your details, our team will contact you to discuss your solar requirements and recommend the most suitable solar package for your home or business.`;
+  }
   const m = last.replace(/,/g, "").match(/(\d{3,7})/);
   const bill = m ? Number(m[1]) : null;
   if (bill && bill >= 1000) {
+    if (bill > COMMERCIAL_THRESHOLD) {
+      return `${COMMERCIAL_MESSAGE}\n\nMay I also know — is this for 🏠 Residential or 🏢 Commercial use? Visit sularex.com for more details.`;
+    }
     const p = recommendByBill(bill);
-    return `Based on a ₱${bill.toLocaleString("en-PH")} monthly bill, we recommend our **${p.name}** (${priceLabel(p)}, ${p.inverter}). To give you an accurate proposal, may I have your name, contact number, and location so we can schedule a FREE site assessment? Visit sularex.com for more details.`;
+    if (p) {
+      return `Based on a ₱${bill.toLocaleString("en-PH")} monthly bill, we recommend our **${p.name}** (${priceLabel(p)}, ${p.inverter}). The best next step is a FREE on-site assessment for an accurate proposal. May I have your name, contact number, location, and average monthly bill? You can also tap [Get Free Assessment] or [Book Site Visit] below. Visit sularex.com for more details.`;
+    }
   }
-  if (/battery/i.test(last)) return "A battery is optional. It stores daytime solar energy for night use and keeps essentials running during brownouts. Want a recommendation? Just tell me your average monthly electric bill. Visit sularex.com for more details.";
+  if (/battery/i.test(last)) return "A battery is optional. It stores daytime solar energy for night use and keeps essentials running during brownouts. Tell me your average monthly electric bill and I'll recommend a package, then we can book your FREE site assessment. Visit sularex.com for more details.";
   if (/warrant/i.test(last)) return "Our panels carry a long-term performance warranty and inverters are covered too — exact terms are confirmed in your proposal. Share your monthly bill and I'll recommend a package. Visit sularex.com for more details.";
-  if (/location|office|where/i.test(last)) return "Our office is on Abellanosa Street, Consolacion, Cagayan de Oro City (inside the Mindanao Daily News Building). Call us at 0917 146 4377. Visit sularex.com for more details.";
-  return "Hi! I'm the SULAREX Solar Assistant. Tell me your average monthly electric bill (e.g. ₱12,000) and I'll recommend the right solar package and savings. Visit sularex.com for more details.";
+  if (/location|office|where|address/i.test(last)) return "Our office is at Tanleh Building (Inside Mindanao Daily News), Abellanosa Street, Consolacion, Cagayan de Oro City. 📞 0917 146 4377 · 📘 facebook.com/SularexEnergy. Visit sularex.com for more details.";
+  return "Hi! I'm the SULAREX Solar Assistant. Tell me your average monthly electric bill (e.g. ₱12,000) and I'll recommend the right solar package and savings — then we can book a FREE site assessment. Visit sularex.com for more details.";
 }
 
 export async function POST(req) {
