@@ -112,11 +112,13 @@ export default function SolarAssistant({ embedded = false }) {
           <div className="font-display font-extrabold text-ink leading-tight">SULAREX Assistant</div>
           <div className="text-[11px] text-lime flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-lime inline-block" /> Online · replies instantly</div>
         </div>
-        {!embedded && (
-          <button onClick={() => setOpen(false)} className="text-dim hover:text-ink p-1" aria-label="Close">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M18 6L6 18" /></svg>
-          </button>
-        )}
+        <button
+          onClick={() => { if (embedded) { try { window.parent.postMessage("sx-close", "*"); } catch (e) {} } else { setOpen(false); } }}
+          className="flex items-center gap-1 text-dim hover:text-ink rounded-lg px-2 py-1.5 border border-line hover:border-gold"
+          aria-label="Close chat">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          <span className="text-[11px] font-semibold sm:hidden">Close</span>
+        </button>
       </div>
 
       {/* messages */}

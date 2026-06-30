@@ -28,13 +28,14 @@
     }
   }
   var open = false;
-  btn.addEventListener("click", function () {
-    open = !open; frame.dataset.open = open ? "1" : "0";
-    frame.style.display = open ? "block" : "none"; size();
-    btn.style.display = open && isMobile() ? "none" : "grid";
-  });
+  function setOpen(v) {
+    open = v; frame.dataset.open = v ? "1" : "0";
+    frame.style.display = v ? "block" : "none"; size();
+    btn.style.display = v && isMobile() ? "none" : "grid";
+  }
+  btn.addEventListener("click", function () { setOpen(!open); });
   window.addEventListener("message", function (e) {
-    if (e && e.data === "sx-close") { open = false; frame.style.display = "none"; btn.style.display = "grid"; }
+    if (e && e.data === "sx-close") setOpen(false);
   });
   document.body.appendChild(frame);
   document.body.appendChild(btn);
