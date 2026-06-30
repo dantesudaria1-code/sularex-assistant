@@ -75,7 +75,7 @@ function fallbackReply(messages) {
     }
     const p = recommendByBill(bill);
     if (p) {
-      return `Based on a ₱${bill.toLocaleString("en-PH")} monthly bill, we recommend our **${p.name}** (${priceLabel(p)}, ${p.inverter}). The best next step is a FREE on-site assessment for an accurate proposal. May I have your name, contact number, location, and average monthly bill? You can also tap [Get Free Assessment] or [Book Site Visit] below. Visit sularex.com for more details.`;
+      return `Based on a ₱${bill.toLocaleString("en-PH")} monthly bill, we recommend our **${p.name}** (${priceLabel(p)}): ${p.inverter}, ${p.panels}, Battery ${p.battery}. Battery capacity and brands can be customized to your backup needs and budget. The best next step is a FREE on-site assessment for an accurate proposal — may I have your name, contact number, location, and average monthly bill? You can also tap [Get Free Assessment] or [Book Site Visit] below. Visit sularex.com for more details.`;
     }
   }
   if (/battery/i.test(last)) return "A battery is optional. It stores daytime solar energy for night use and keeps essentials running during brownouts. Tell me your average monthly electric bill and I'll recommend a package, then we can book your FREE site assessment. Visit sularex.com for more details.";
