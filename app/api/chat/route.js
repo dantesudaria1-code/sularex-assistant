@@ -65,23 +65,23 @@ async function runTool(name, input) {
 function fallbackReply(messages) {
   const last = (messages[messages.length - 1]?.content || "").toString();
   if (/talk to (a )?human|talk to (an )?agent|speak to|real person|customer service|representative/i.test(last)) {
-    return `Thank you for your interest in SULAREX.\nTo connect you with one of our solar specialists, please provide:\n• Full Name • Contact Number • Location • Average Monthly Electric Bill\n\nYou may also contact us directly:\n📍 Office Address: Tanleh Building (Inside Mindanao Daily News), Abellanosa Street, Consolacion, Cagayan de Oro City\n📞 Mobile: 0917 146 4377\n📘 Facebook Page: https://www.facebook.com/SularexEnergy\n\nOnce we receive your details, our team will contact you to discuss your solar requirements and recommend the most suitable solar package for your home or business.`;
+    return "Of course! You can reach our team directly at 0917 146 4377, or visit our office at Tanleh Building (Inside Mindanao Daily News), Abellanosa Street, Consolacion, Cagayan de Oro City. If you'd like, I can take your name and number so a specialist can call you back — may I have your full name?";
   }
   const m = last.replace(/,/g, "").match(/(\d{3,7})/);
   const bill = m ? Number(m[1]) : null;
   if (bill && bill >= 1000) {
     if (bill > COMMERCIAL_THRESHOLD) {
-      return `${COMMERCIAL_MESSAGE}\n\nMay I also know — is this for 🏠 Residential or 🏢 Commercial use? Visit sularex.com for more details.`;
+      return `${COMMERCIAL_MESSAGE}\n\nIs this for residential or commercial use?`;
     }
     const p = recommendByBill(bill);
     if (p) {
-      return `Based on a ₱${bill.toLocaleString("en-PH")} monthly bill, we recommend our **${p.name}** (${priceLabel(p)}): ${p.inverter}, ${p.panels}, Battery ${p.battery}. Battery capacity and brands can be customized to your backup needs and budget. The best next step is a FREE on-site assessment for an accurate proposal — may I have your name, contact number, location, and average monthly bill? You can also tap [Get Free Assessment] or [Book Site Visit] below. Visit sularex.com for more details.`;
+      return `Based on a ₱${bill.toLocaleString("en-PH")} monthly bill, I'd recommend our **${p.name}** (${priceLabel(p)}) — it includes ${p.inverter}, ${p.panels}, and Battery ${p.battery}, and it can be customized to your backup needs and budget.\n\nWould you like a free quotation or a free on-site assessment?`;
     }
   }
-  if (/battery/i.test(last)) return "A battery is optional. It stores daytime solar energy for night use and keeps essentials running during brownouts. Tell me your average monthly electric bill and I'll recommend a package, then we can book your FREE site assessment. Visit sularex.com for more details.";
-  if (/warrant/i.test(last)) return "Our panels carry a long-term performance warranty and inverters are covered too — exact terms are confirmed in your proposal. Share your monthly bill and I'll recommend a package. Visit sularex.com for more details.";
-  if (/location|office|where|address/i.test(last)) return "Our office is at Tanleh Building (Inside Mindanao Daily News), Abellanosa Street, Consolacion, Cagayan de Oro City. 📞 0917 146 4377 · 📘 facebook.com/SularexEnergy. Visit sularex.com for more details.";
-  return "Hi! I'm the SULAREX Solar Assistant. Tell me your average monthly electric bill (e.g. ₱12,000) and I'll recommend the right solar package and savings — then we can book a FREE site assessment. Visit sularex.com for more details.";
+  if (/battery/i.test(last)) return "A battery is optional — it stores your daytime solar energy for night use and keeps essentials running during brownouts. May I know your average monthly electric bill so I can recommend the right package?";
+  if (/warrant/i.test(last)) return "Our solar panels come with a 12-year warranty, and the battery and inverter are covered for 5 years, plus a 1-year workmanship guarantee. May I know your average monthly electric bill so I can recommend a package?";
+  if (/location|office|where|address/i.test(last)) return "Our office is at Tanleh Building (Inside Mindanao Daily News), Abellanosa Street, Consolacion, Cagayan de Oro City. You can also reach us at 0917 146 4377. How can I help with your solar needs today?";
+  return "Hi! I'm the SULAREX Solar Assistant. May I know your average monthly electric bill so I can recommend the right solar package for you?";
 }
 
 export async function POST(req) {
@@ -124,7 +124,7 @@ export async function POST(req) {
       const text = (resp.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
       return Response.json({ reply: text || "How can I help you with solar today?", ...actions });
     }
-    return Response.json({ reply: "Thanks! Our team will follow up shortly. Visit sularex.com for more details.", ...actions });
+    return Response.json({ reply: "Thanks! Our team will follow up with you shortly.", ...actions });
   } catch (e) {
     console.error("[chat] error", e);
     return Response.json({ reply: fallbackReply(history), error: String(e?.message || e), fallback: true });

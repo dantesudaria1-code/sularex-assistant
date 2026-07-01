@@ -11,10 +11,10 @@ const SUGGESTIONS = [
 ];
 
 const GREETING =
-  "Hi! 👋 I'm the SULAREX Solar Assistant. Tell me your average monthly electric bill (e.g. ₱12,000) and I'll recommend the right solar package — and how much you could save. Visit sularex.com for more details.";
+  "Hi! 👋 I'm the SULAREX Solar Assistant. To recommend the right solar package for you, may I know your average monthly electric bill?";
 
 const TALK_TO_HUMAN =
-  "Thank you for your interest in SULAREX.\nTo connect you with one of our solar specialists, please provide:\n• Full Name • Contact Number • Location • Average Monthly Electric Bill\n\nYou may also contact us directly:\n📍 Office Address: Tanleh Building (Inside Mindanao Daily News), Abellanosa Street, Consolacion, Cagayan de Oro City\n📞 Mobile: 0917 146 4377\n📘 Facebook Page: https://www.facebook.com/SularexEnergy\n\nOnce we receive your details, our team will contact you to discuss your solar requirements and recommend the most suitable solar package for your home or business.";
+  "Of course! You can reach our team directly:\n📞 Mobile: 0917 146 4377\n📍 Office: Tanleh Building (Inside Mindanao Daily News), Abellanosa Street, Consolacion, Cagayan de Oro City\n📘 Facebook: https://www.facebook.com/SularexEnergy\n\nIf you'd like, I can take your name and number so a specialist can call you back — may I have your full name?";
 
 /* Circular SULAREX avatar — uses the logo image, falls back to a sun/solar icon. */
 function Avatar({ size = 36 }) {
@@ -84,7 +84,7 @@ export default function SolarAssistant({ embedded = false }) {
       const data = await res.json();
       setMessages((m) => [...m, { role: "assistant", content: data.reply || "Sorry, please try again." }]);
     } catch {
-      setMessages((m) => [...m, { role: "assistant", content: "I had trouble connecting. Please call us at 0917 146 4377 or visit sularex.com." }]);
+      setMessages((m) => [...m, { role: "assistant", content: "I had trouble connecting. Please try again, or call us at 0917 146 4377." }]);
     } finally {
       setBusy(false);
     }
@@ -183,7 +183,7 @@ export default function SolarAssistant({ embedded = false }) {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
         </button>
       </div>
-      <div className="text-center text-[10px] text-dim pb-2">Powered by SULAREX · sularex.com</div>
+      <div className="text-center text-[10px] text-dim pb-2">Powered by SULAREX</div>
     </div>
   );
 
@@ -225,7 +225,7 @@ function LeadForm({ onClose, onDone }) {
     try {
       const res = await fetch("/api/lead", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...f, source: "Web form (assistant)" }) });
       const d = await res.json();
-      if (d.ok) onDone(`Thanks ${f.full_name.split(" ")[0]}! ✅ Your details are in — our team will reach out shortly to arrange your FREE site assessment. Visit sularex.com for more details.`);
+      if (d.ok) onDone(`Thanks ${f.full_name.split(" ")[0]}! ✅ Your details are in — our team will reach out shortly to arrange your FREE site assessment.`);
       else setErr(d.error || "Something went wrong.");
     } catch { setErr("Network error. Please call 0917 146 4377."); }
     finally { setBusy(false); }
@@ -262,7 +262,7 @@ function VisitForm({ onClose, onDone }) {
     try {
       const res = await fetch("/api/site-visit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...f, source: "Web form (assistant)" }) });
       const d = await res.json();
-      if (d.ok) onDone(`Booked! ✅ Your FREE site visit request for ${f.preferred_date} is in. Our team will confirm by phone. Visit sularex.com for more details.`);
+      if (d.ok) onDone(`Booked! ✅ Your FREE site visit request for ${f.preferred_date} is in. Our team will confirm by phone.`);
       else setErr(d.error || "Something went wrong.");
     } catch { setErr("Network error. Please call 0917 146 4377."); }
     finally { setBusy(false); }
